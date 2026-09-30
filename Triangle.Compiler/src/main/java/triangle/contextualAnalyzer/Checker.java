@@ -40,6 +40,7 @@ import triangle.abstractSyntaxTrees.commands.IfCommand;
 import triangle.abstractSyntaxTrees.commands.LetCommand;
 import triangle.abstractSyntaxTrees.commands.SequentialCommand;
 import triangle.abstractSyntaxTrees.commands.WhileCommand;
+import triangle.abstractSyntaxTrees.commands.RepeatCommand;
 import triangle.abstractSyntaxTrees.declarations.BinaryOperatorDeclaration;
 import triangle.abstractSyntaxTrees.declarations.ConstDeclaration;
 import triangle.abstractSyntaxTrees.declarations.ConstantDeclaration;
@@ -188,6 +189,13 @@ public final class Checker implements ActualParameterVisitor<FormalParameter, Vo
 		return null;
 	}
 
+    @Override
+    public Void visitRepeatCommand(RepeatCommand ast, Void arg) {
+        ast.E.visit(this);
+        ast.C.visit(this);
+        return null;
+    }
+
 	// Expressions
 
 	// Returns the TypeDenoter denoting the type of the expression. Does
@@ -202,27 +210,33 @@ public final class Checker implements ActualParameterVisitor<FormalParameter, Vo
 	}
 
 	@Override
-	public TypeDenoter visitBinaryExpression(BinaryExpression ast, Void arg) {
-		var e1Type = ast.E1.visit(this);
-		var e2Type = ast.E2.visit(this);
-		var binding = ast.O.visit(this);
+    public TypeDenoter visitBinaryExpression(BinaryExpression ast, Void arg) {
+        TypeDenoter e1Type = ast.E1.visit(this);
+        TypeDenoter e2Type = ast.E2.visit(this);
 
-		if (binding instanceof BinaryOperatorDeclaration bbinding) {
-			if (bbinding.ARG1 == StdEnvironment.anyType) {
-				// this operator must be "=" or "\="
-				checkAndReportError(e1Type.equals(e2Type), "incompatible argument types for \"%\"", ast.O, ast);
-			} else {
-				checkAndReportError(e1Type.equals(bbinding.ARG1), "wrong argument type for \"%\"", ast.O, ast.E1);
-				checkAndReportError(e2Type.equals(bbinding.ARG2), "wrong argument type for \"%\"", ast.O, ast.E2);
-			}
-			return ast.type = bbinding.RES;
-		}
+        if (ast.O.spelling.equals("&&") || ast.O.spelling.equals("||")) {
+            checkAndReportError(e1Type.equals(StdEnvironment.booleanType),
+                    "Boolean operand expected here", ast.E1);
+            checkAndReportError(e2Type.equals(StdEnvironment.booleanType),
+                    "Boolean operand expected here", ast.E2);
+            return ast.type = StdEnvironment.booleanType;
+        }
 
-		reportUndeclaredOrError(binding, ast.O, "\"%\" is not a binary operator");
-		return ast.type = StdEnvironment.errorType;
-	}
+        if (ast.O.spelling.equals("=") || ast.O.spelling.equals("\\=")) {
+            checkAndReportError(e1Type.equals(e2Type),
+                    "incompatible operands", ast);
+            return ast.type = StdEnvironment.booleanType;
+        }
 
-	@Override
+        checkAndReportError(e1Type.equals(StdEnvironment.integerType),
+                "Integer operand expected here", ast.E1);
+        checkAndReportError(e2Type.equals(StdEnvironment.integerType),
+                "Integer operand expected here", ast.E2);
+
+        return ast.type = StdEnvironment.integerType;
+    }
+
+    @Override
 	public TypeDenoter visitCallExpression(CallExpression ast, Void arg) {
 		var binding = ast.I.visit(this);
 

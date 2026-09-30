@@ -44,6 +44,7 @@ import triangle.abstractSyntaxTrees.commands.IfCommand;
 import triangle.abstractSyntaxTrees.commands.LetCommand;
 import triangle.abstractSyntaxTrees.commands.SequentialCommand;
 import triangle.abstractSyntaxTrees.commands.WhileCommand;
+import triangle.abstractSyntaxTrees.commands.RepeatCommand;
 import triangle.abstractSyntaxTrees.declarations.BinaryOperatorDeclaration;
 import triangle.abstractSyntaxTrees.declarations.ConstDeclaration;
 import triangle.abstractSyntaxTrees.declarations.Declaration;
@@ -185,7 +186,15 @@ public final class Encoder implements ActualParameterVisitor<Frame, Integer>,
 		return null;
 	}
 
-	// Expressions
+    @Override
+    public Void visitRepeatCommand(RepeatCommand ast, Frame frame) {
+        return null;
+    }
+
+
+
+
+    // Expressions
 	@Override
 	public Integer visitArrayExpression(ArrayExpression ast, Frame frame) {
 		ast.type.visit(this, frame);

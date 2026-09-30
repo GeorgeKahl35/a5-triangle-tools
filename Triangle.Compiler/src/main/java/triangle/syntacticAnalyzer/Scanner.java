@@ -38,7 +38,7 @@ public final class Scanner {
 	// isOperator returns true iff the given character is an operator character.
 
 	public static boolean isOperator(char c) {
-		return (c == '+' || c == '-' || c == '*' || c == '/' || c == '=' || c == '<' || c == '>' || c == '\\'
+		return (c == '|' || c == '+' || c == '-' || c == '*' || c == '/' || c == '=' || c == '<' || c == '>' || c == '\\'
 				|| c == '&' || c == '@' || c == '%' || c == '^' || c == '?');
 	}
 
@@ -65,31 +65,42 @@ public final class Scanner {
 
 	// scanSeparator skips a single separator.
 
-	private void scanSeparator() {
-		switch (currentChar) {
-		
-		// comment
-		case '!': 
-			takeIt();
-			
-			// the comment ends when we reach an end-of-line (EOL) or end of file (EOT - for end-of-transmission)
-			while ((currentChar != SourceFile.EOL) && (currentChar != SourceFile.EOT))
-				takeIt();
-			if (currentChar == SourceFile.EOL)
-				takeIt();
-			break;
+    private void scanSeparator() {
+        switch (currentChar) {
+            // comment
+            case '!':
+            case '#':
+                takeIt();
 
-		// whitespace
-		case ' ':
-		case '\n':
-		case '\r':
-		case '\t':
-			takeIt();
-			break;
-		}
-	}
+                // the comment ends when we reach an end-of-line (EOL) or end of file (EOT)
+                while ((currentChar != SourceFile.EOL) && (currentChar != SourceFile.EOT))
+                    takeIt();
 
-	private Token.Kind scanToken() {
+                if (currentChar == SourceFile.EOL)
+                    takeIt();
+
+                break;
+
+            // whitespace
+            case '$':
+                takeIt();
+                while(currentChar != '$' && currentChar != SourceFile.EOT)
+                    takeIt();
+
+                if(currentChar == '$')
+                    takeIt();
+                break;
+            case ' ':
+            case '\n':
+            case '\r':
+            case '\t':
+                takeIt();
+                break;
+        }
+    }
+
+
+    private Token.Kind scanToken() {
 
 		switch (currentChar) {
 
@@ -177,11 +188,13 @@ public final class Scanner {
 		case '@':
 		case '%':
 		case '^':
-		case '?':
+        case '?':
+        case '|':
 			takeIt();
 			while (isOperator(currentChar))
 				takeIt();
 			return Token.Kind.OPERATOR;
+
 
 		case '\'':
 			takeIt();
@@ -256,7 +269,7 @@ public final class Scanner {
 
 		currentlyScanningToken = false;
 		// skip any whitespace or comments
-		while (currentChar == '!' || currentChar == ' ' || currentChar == '\n' || currentChar == '\r'
+		while (currentChar == '$' || currentChar == '#' || currentChar == '!' || currentChar == ' ' || currentChar == '\n' || currentChar == '\r'
 				|| currentChar == '\t')
 			scanSeparator();
 
